@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import {
   calculate,
   formatKr,
+  AVAILABLE_TAX_TABLES,
   type CalculatorInputs,
 } from "@/lib/taxCalculations";
 import ResultCard from "./ResultCard";
@@ -84,6 +85,7 @@ export default function Calculator() {
   const [grossSalary, setGrossSalary]       = useState(50_000);
   const [otherCosts, setOtherCosts]         = useState(5_000);
   const [pensionContribution, setPension]   = useState(3_000);
+  const [taxTable, setTaxTable]             = useState("32");
   const [showComparison, setShowComparison] = useState(false);
 
   /** Redigerbara lönenivåer i jämförelsekolumnerna */
@@ -102,6 +104,7 @@ export default function Calculator() {
     grossSalary,
     otherCosts,
     pensionContribution,
+    taxTable,
   };
 
   const result      = useMemo(() => calculate(inputs), [inputs]);
@@ -130,7 +133,7 @@ export default function Calculator() {
         <h1 className="text-2xl font-bold text-gray-900">Lönekalkylator för konsult</h1>
         <p className="mt-1 text-sm text-gray-500">
           Simulera hur ditt fakturerade belopp fördelas. Skatteberäkningar per{" "}
-          <span className="font-medium text-gray-700">Skatteverkets tabell 32, Stockholm 2026</span>{" "}
+          <span className="font-medium text-gray-700">Skatteverkets {AVAILABLE_TAX_TABLES[taxTable]?.split("–")[0].trim()}, 2026</span>{" "}
           (SKVFS 2025:20).
         </p>
       </div>
@@ -138,7 +141,7 @@ export default function Calculator() {
       {/* ── Kompakt inputpanel ── */}
       <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Förutsättningar</p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
           <NumInput
             label="Fakturerat belopp"
             value={invoicedAmount}
@@ -163,6 +166,21 @@ export default function Calculator() {
             onChange={setPension}
             hint="via bolaget / mån"
           />
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <label className="text-xs font-medium text-gray-500 whitespace-nowrap">Skattetabell</label>
+            <div className="flex items-center rounded-lg border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+              <select
+                value={taxTable}
+                onChange={(e) => setTaxTable(e.target.value)}
+                className="w-full min-w-0 rounded-lg bg-transparent px-3 py-2 text-sm text-gray-900 focus:outline-none"
+              >
+                {Object.entries(AVAILABLE_TAX_TABLES).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </div>
+            <p className="text-xs text-gray-400 leading-tight">din kommun</p>
+          </div>
         </div>
       </div>
 
