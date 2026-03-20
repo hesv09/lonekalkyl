@@ -267,7 +267,8 @@ export default function Calculator() {
                     {/* Ocontrollerad input: defaultValue sätter startvärde, DOM äger displayvärdet.
                         Undviker cursor-hopp som uppstår med controlled inputs (value=) vid varje
                         tangenttryckning som triggar re-render. */}
-                    <div className="inline-flex items-center rounded-lg border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                    {/* Indigo-stil signalerar tydligt att fältet är redigerbart */}
+                    <div className="inline-flex items-center rounded-lg border-2 border-indigo-300 bg-indigo-50 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200">
                       <input
                         type="number"
                         defaultValue={compSalaries[i]}
@@ -277,9 +278,9 @@ export default function Calculator() {
                           const v = Number(e.target.value);
                           if (!isNaN(v)) setCompSalary(i as 0 | 1 | 2, v);
                         }}
-                        className="w-24 rounded-lg bg-transparent px-2 py-1 text-right text-sm font-semibold tabular-nums text-gray-900 focus:outline-none"
+                        className="w-24 rounded-lg bg-transparent px-2 py-1 text-right text-sm font-bold tabular-nums text-indigo-700 focus:outline-none"
                       />
-                      <span className="pr-2 text-xs text-gray-400">kr/mån</span>
+                      <span className="pr-2 text-xs font-medium text-indigo-400">kr/mån</span>
                     </div>
                   </th>
                 ))}
@@ -307,9 +308,9 @@ export default function Calculator() {
                 ] as [string, number[]][]
               ).map(([label, values]) => (
                 <tr key={label} className="border-b border-gray-100 last:border-0">
-                  <td className="py-1.5 text-gray-600">{label}</td>
+                  <td className="py-1.5 text-slate-700 font-medium">{label}</td>
                   {values.map((v, i) => (
-                    <td key={i} className={`py-1.5 text-right font-medium tabular-nums ${v < 0 ? "text-red-600" : ""}`}>
+                    <td key={i} className={`py-1.5 text-right font-semibold tabular-nums ${v < 0 ? "text-red-600" : "text-gray-900"}`}>
                       {formatKr(v)}
                     </td>
                   ))}
