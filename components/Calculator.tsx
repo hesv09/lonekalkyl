@@ -337,6 +337,17 @@ export default function Calculator() {
                   ))}
                 </tr>
               ))}
+              <tr className="border-t-2 border-gray-300 bg-green-50">
+                <td className="py-2 font-bold text-green-900">Totalt disponibelt (lön + utdelning efter skatt)</td>
+                {comparisonData.map((d, i) => {
+                  const total = (d.netSalary + Math.round(Math.max(0, d.dividend) * (1 - DIVIDEND_TAX_RATE))) * 12;
+                  return (
+                    <td key={i} className="py-2 text-right font-bold tabular-nums text-green-700">
+                      {formatKr(total)}
+                    </td>
+                  );
+                })}
+              </tr>
             </tbody>
           </table>
         </div>
