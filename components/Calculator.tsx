@@ -90,7 +90,7 @@ export default function Calculator() {
         </h1>
         <p className="mt-1 text-sm text-gray-500">
           Simulera hur ditt fakturerade belopp fördelas beroende på löneuttag.
-          Skatteberäkningar baseras på Skatteverkets tabell 32 (Stockholm 2024).
+          Skatteberäkningar baseras på Skatteverkets tabell 32 (Stockholm 2026, SKVFS 2025:20).
         </p>
       </div>
 
