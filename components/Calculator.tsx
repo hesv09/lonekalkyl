@@ -254,19 +254,19 @@ export default function Calculator() {
           </h2>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="pb-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Post</th>
+              {/* Rad 1: etiketter + redigerbara månadslöne-inputs */}
+              <tr>
+                <th className="pb-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Bruttolön/mån
+                </th>
                 {COMPARISON_LABELS.map((label, i) => (
-                  <th key={label} className="pb-2 text-right align-bottom">
-                    {/* Etikett */}
+                  <th key={label} className="pb-1 text-right align-bottom">
                     <span className="block text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">
                       {label}
                     </span>
-                    {/* Redigerbart lönefält direkt i kolumnhuvudet */}
                     {/* Ocontrollerad input: defaultValue sätter startvärde, DOM äger displayvärdet.
                         Undviker cursor-hopp som uppstår med controlled inputs (value=) vid varje
-                        tangenttryckning som triggar re-render. compSalaries uppdateras via onChange
-                        för att hålla beräkningarna synkade i realtid. */}
+                        tangenttryckning som triggar re-render. */}
                     <div className="inline-flex items-center rounded-lg border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
                       <input
                         type="number"
@@ -279,22 +279,31 @@ export default function Calculator() {
                         }}
                         className="w-24 rounded-lg bg-transparent px-2 py-1 text-right text-sm font-semibold tabular-nums text-gray-900 focus:outline-none"
                       />
-                      <span className="pr-2 text-xs text-gray-400">kr</span>
+                      <span className="pr-2 text-xs text-gray-400">kr/mån</span>
                     </div>
                   </th>
                 ))}
+              </tr>
+              {/* Rad 2: tydlig markering att beräknade värden är per år */}
+              <tr className="border-b-2 border-gray-200">
+                <th className="py-1.5 text-left text-xs font-semibold text-blue-600">
+                  Per år (× 12 månader)
+                </th>
+                <th colSpan={3} className="py-1.5 text-right text-xs text-blue-500">
+                  Alla beräknade belopp nedan är årsbelopp
+                </th>
               </tr>
             </thead>
             <tbody>
               {(
                 [
-                  ["Arbetsgivaravgift",   comparisonData.map((d) => d.employersFee)],
-                  ["Skatt på lön",        comparisonData.map((d) => d.incomeTax)],
-                  ["Nettolön",            comparisonData.map((d) => d.netSalary)],
+                  ["Arbetsgivaravgift",   comparisonData.map((d) => d.employersFee * 12)],
+                  ["Skatt på lön",        comparisonData.map((d) => d.incomeTax * 12)],
+                  ["Nettolön",            comparisonData.map((d) => d.netSalary * 12)],
                   ["Kvar i bolaget",      compSalaries.map((salary) =>
-                    calculate({ ...inputs, grossSalary: salary }).companyRemainder)],
-                  ["Bolagsskatt",         comparisonData.map((d) => d.corporateTax)],
-                  ["Möjlig utdelning",    comparisonData.map((d) => d.dividend)],
+                    calculate({ ...inputs, grossSalary: salary }).companyRemainder * 12)],
+                  ["Bolagsskatt",         comparisonData.map((d) => d.corporateTax * 12)],
+                  ["Möjlig utdelning",    comparisonData.map((d) => d.dividend * 12)],
                 ] as [string, number[]][]
               ).map(([label, values]) => (
                 <tr key={label} className="border-b border-gray-100 last:border-0">
