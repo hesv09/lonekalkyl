@@ -11,6 +11,7 @@ interface YearlySummaryProps {
   pension: number;
   corporateTax: number;
   dividend: number;
+  dividendAfterTax: number;
   invoicedAmount: number;
 }
 
@@ -56,10 +57,11 @@ export default function YearlySummary(props: YearlySummaryProps) {
     pension,
     corporateTax,
     dividend,
+    dividendAfterTax,
     invoicedAmount,
   } = props;
 
-  const totalDisposable = Math.max(0, netSalary) + Math.max(0, dividend);
+  const totalDisposable = Math.max(0, netSalary) + Math.max(0, dividendAfterTax);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -141,9 +143,23 @@ export default function YearlySummary(props: YearlySummaryProps) {
             bold
           />
           <YearlyRow
-            label="Möjlig utdelning"
+            label="Möjlig utdelning (före skatt)"
             monthly={Math.max(0, dividend)}
             yearly={Math.max(0, dividend) * 12}
+            accent="blue"
+          />
+          {dividend > 0 && (
+            <YearlyRow
+              label="Kapitalskatt 3:12 (20,0 %)"
+              monthly={Math.round(Math.max(0, dividend) * 0.20)}
+              yearly={Math.round(Math.max(0, dividend) * 0.20) * 12}
+              accent="red"
+            />
+          )}
+          <YearlyRow
+            label="Utdelning efter skatt"
+            monthly={Math.max(0, dividendAfterTax)}
+            yearly={Math.max(0, dividendAfterTax) * 12}
             accent="blue"
             bold
           />

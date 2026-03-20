@@ -731,6 +731,9 @@ export const EMPLOYERS_FEE_RATE = 0.3142;
 /** Bolagsskatt – 20,0 % */
 export const CORPORATE_TAX_RATE = 0.20;
 
+/** Kapitalskatt på utdelning enligt 3:12-reglerna – 20,0 % */
+export const DIVIDEND_TAX_RATE = 0.20;
+
 export interface CalculatorInputs {
   invoicedAmount: number;      // Fakturerat belopp kr/mån
   grossSalary: number;         // Bruttolön kr/mån
@@ -751,7 +754,8 @@ export interface CalculatorResults {
   // Bolaget
   companyRemainder: number;    // Kvar i bolaget före bolagsskatt
   corporateTax: number;        // Bolagsskatt 20,0 %
-  possibleDividend: number;    // Möjlig utdelning efter bolagsskatt
+  possibleDividend: number;    // Möjlig utdelning (före kapitalskatt)
+  dividendAfterTax: number;    // Utdelning efter 20% kapitalskatt (3:12)
 
   // Summering för stapeldiagram
   breakdown: {
@@ -785,12 +789,17 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     ? Math.round(companyRemainder * CORPORATE_TAX_RATE)
     : 0;
 
-  // 5. Möjlig utdelning
+  // 5. Möjlig utdelning (före kapitalskatt)
   const possibleDividend = companyRemainder > 0
     ? companyRemainder - corporateTax
     : companyRemainder; // negativt → inga pengar kvar
 
-  // 6. Skatt på lön via vald skattetabell
+  // 6. Kapitalskatt på utdelning 20 % (3:12-reglerna)
+  const dividendAfterTax = possibleDividend > 0
+    ? Math.round(possibleDividend * (1 - DIVIDEND_TAX_RATE))
+    : possibleDividend;
+
+  // 7. Skatt på lön via vald skattetabell
   const incomeTax = lookupTax(grossSalary, taxTableNum);
 
   // 7. Nettolön
@@ -804,6 +813,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     companyRemainder,
     corporateTax,
     possibleDividend,
+    dividendAfterTax,
     breakdown: {
       netSalary: Math.max(0, netSalary),
       incomeTax,

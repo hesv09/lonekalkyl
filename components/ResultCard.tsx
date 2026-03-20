@@ -45,6 +45,7 @@ interface ResultCardProps {
   pension: number;
   corporateTax: number;
   dividend: number;
+  dividendAfterTax: number;
   companyRemainder: number;
 }
 
@@ -69,6 +70,7 @@ export default function ResultCard(props: ResultCardProps) {
     pension,
     corporateTax,
     dividend,
+    dividendAfterTax,
     companyRemainder,
   } = props;
 
@@ -107,12 +109,29 @@ export default function ResultCard(props: ResultCardProps) {
           />
           <ResultRow label="Bolagsskatt (20,0 %)" value={corporateTax} sub color={COLORS.corporateTax} negative />
           <ResultRow
-            label="Möjlig utdelning"
+            label="Möjlig utdelning (före skatt)"
             value={dividend}
             sub
             color={COLORS.dividend}
             negative={dividend < 0}
           />
+          {dividend > 0 && (
+            <ResultRow
+              label="Kapitalskatt 3:12 (20,0 %)"
+              value={Math.round(dividend * 0.20)}
+              sub
+              color={COLORS.corporateTax}
+              negative
+            />
+          )}
+          {dividend > 0 && (
+            <ResultRow
+              label="Utdelning efter skatt"
+              value={dividendAfterTax}
+              highlight
+              color={COLORS.dividend}
+            />
+          )}
         </div>
 
         {/* Lön netto */}

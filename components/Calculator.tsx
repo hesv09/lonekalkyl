@@ -5,6 +5,7 @@ import {
   calculate,
   formatKr,
   AVAILABLE_TAX_TABLES,
+  DIVIDEND_TAX_RATE,
   type CalculatorInputs,
 } from "@/lib/taxCalculations";
 import ResultCard from "./ResultCard";
@@ -123,7 +124,7 @@ export default function Calculator() {
     ? (result.incomeTax / grossSalary * 100).toFixed(1)
     : "0";
 
-  const totalDisposable = Math.max(0, result.netSalary) + Math.max(0, result.possibleDividend);
+  const totalDisposable = Math.max(0, result.netSalary) + Math.max(0, result.dividendAfterTax);
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 pt-6">
@@ -198,9 +199,9 @@ export default function Calculator() {
           accent="amber"
         />
         <KpiCard
-          label="Möjlig utdelning"
-          value={Math.max(0, result.possibleDividend)}
-          sub="efter bolagsskatt"
+          label="Utdelning efter skatt"
+          value={Math.max(0, result.dividendAfterTax)}
+          sub="efter bolagsskatt + 3:12 (20%)"
           accent="blue"
         />
         <KpiCard
@@ -226,6 +227,7 @@ export default function Calculator() {
             pension={pensionContribution}
             corporateTax={result.corporateTax}
             dividend={result.possibleDividend}
+            dividendAfterTax={result.dividendAfterTax}
             companyRemainder={result.companyRemainder}
           />
           <p className="text-xs text-gray-400 leading-relaxed">
@@ -250,6 +252,7 @@ export default function Calculator() {
           pension={pensionContribution}
           corporateTax={result.corporateTax}
           dividend={result.possibleDividend}
+          dividendAfterTax={result.dividendAfterTax}
         />
       </div>
 
@@ -319,8 +322,10 @@ export default function Calculator() {
                   ["Nettolön",            comparisonData.map((d) => d.netSalary * 12)],
                   ["Kvar i bolaget",      compSalaries.map((salary) =>
                     calculate({ ...inputs, grossSalary: salary }).companyRemainder * 12)],
-                  ["Bolagsskatt",         comparisonData.map((d) => d.corporateTax * 12)],
-                  ["Möjlig utdelning",    comparisonData.map((d) => d.dividend * 12)],
+                  ["Bolagsskatt",                   comparisonData.map((d) => d.corporateTax * 12)],
+                  ["Utdelning (före skatt)",        comparisonData.map((d) => d.dividend * 12)],
+                  ["Kapitalskatt 3:12 (20 %)",      comparisonData.map((d) => -Math.round(Math.max(0, d.dividend) * DIVIDEND_TAX_RATE) * 12)],
+                  ["Utdelning efter skatt",         comparisonData.map((d) => Math.round(Math.max(0, d.dividend) * (1 - DIVIDEND_TAX_RATE)) * 12)],
                 ] as [string, number[]][]
               ).map(([label, values]) => (
                 <tr key={label} className="border-b border-gray-100 last:border-0">
