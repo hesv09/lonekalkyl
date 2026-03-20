@@ -80,7 +80,7 @@ function KpiCard({ label, value, sub, accent = "default", large }: KpiCardProps)
  * All state hanteras lokalt – inga externa databaser.
  */
 export default function Calculator() {
-  const [invoicedAmount, setInvoicedAmount] = useState(100_000);
+  const [invoicedAmount, setInvoicedAmount] = useState(87_500);
   const [grossSalary, setGrossSalary]       = useState(50_000);
   const [otherCosts, setOtherCosts]         = useState(5_000);
   const [pensionContribution, setPension]   = useState(3_000);
