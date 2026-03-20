@@ -105,7 +105,7 @@ export default function ResultCard(props: ResultCardProps) {
             sub
             negative={companyRemainder < 0}
           />
-          <ResultRow label="Bolagsskatt (20,6 %)" value={corporateTax} sub color={COLORS.corporateTax} negative />
+          <ResultRow label="Bolagsskatt (20,0 %)" value={corporateTax} sub color={COLORS.corporateTax} negative />
           <ResultRow
             label="Möjlig utdelning"
             value={dividend}

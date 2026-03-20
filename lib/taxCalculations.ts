@@ -171,8 +171,8 @@ export function lookupTax(grossMonthly: number): number {
 /** Arbetsgivaravgift – 31,42 % (2026) */
 export const EMPLOYERS_FEE_RATE = 0.3142;
 
-/** Bolagsskatt – 20,6 % */
-export const CORPORATE_TAX_RATE = 0.206;
+/** Bolagsskatt – 20,0 % */
+export const CORPORATE_TAX_RATE = 0.20;
 
 export interface CalculatorInputs {
   invoicedAmount: number;      // Fakturerat belopp kr/mån
@@ -192,7 +192,7 @@ export interface CalculatorResults {
 
   // Bolaget
   companyRemainder: number;    // Kvar i bolaget före bolagsskatt
-  corporateTax: number;        // Bolagsskatt 20,6 %
+  corporateTax: number;        // Bolagsskatt 20,0 %
   possibleDividend: number;    // Möjlig utdelning efter bolagsskatt
 
   // Summering för stapeldiagram

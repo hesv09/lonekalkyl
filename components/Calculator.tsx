@@ -10,12 +10,8 @@ import ResultCard from "./ResultCard";
 import BreakdownChart, { type BreakdownData } from "./BreakdownChart";
 import YearlySummary from "./YearlySummary";
 
-/** Tre fördefinierade lönenivåer för jämförelsevy */
-const COMPARISON_SALARIES = [
-  { name: "Låg lön", salary: 35_000 },
-  { name: "Mellanlön", salary: 55_000 },
-  { name: "Hög lön", salary: 75_000 },
-];
+/** Standardetiketter för jämförelsekolumnerna */
+const COMPARISON_LABELS = ["Låg lön", "Mellanlön", "Hög lön"] as const;
 
 // ── Kompakt nummerinput ────────────────────────────────────────────────────
 
@@ -90,6 +86,17 @@ export default function Calculator() {
   const [pensionContribution, setPension]   = useState(3_000);
   const [showComparison, setShowComparison] = useState(false);
 
+  /** Redigerbara lönenivåer i jämförelsekolumnerna */
+  const [compSalaries, setCompSalaries] = useState<[number, number, number]>([35_000, 50_000, 70_000]);
+
+  function setCompSalary(index: 0 | 1 | 2, value: number) {
+    setCompSalaries((prev) => {
+      const next = [...prev] as [number, number, number];
+      next[index] = value;
+      return next;
+    });
+  }
+
   const inputs: CalculatorInputs = {
     invoicedAmount,
     grossSalary,
@@ -101,12 +108,12 @@ export default function Calculator() {
   const chartData: BreakdownData[] = useMemo(() => [{ name: "Din mix", ...result.breakdown }], [result]);
 
   const comparisonData: BreakdownData[] = useMemo(
-    () => COMPARISON_SALARIES.map(({ name, salary }) => {
+    () => compSalaries.map((salary, i) => {
       const r = calculate({ ...inputs, grossSalary: salary });
-      return { name, ...r.breakdown };
+      return { name: COMPARISON_LABELS[i], ...r.breakdown };
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [invoicedAmount, otherCosts, pensionContribution],
+    [invoicedAmount, otherCosts, pensionContribution, compSalaries],
   );
 
   const effectiveTaxRate = grossSalary > 0
@@ -248,10 +255,32 @@ export default function Calculator() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="pb-2 text-left text-gray-500 font-normal">Post</th>
-                {COMPARISON_SALARIES.map(({ name }) => (
-                  <th key={name} className="pb-2 text-right text-gray-700 font-semibold">
-                    {name}
+                <th className="pb-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Post</th>
+                {COMPARISON_LABELS.map((label, i) => (
+                  <th key={label} className="pb-2 text-right align-bottom">
+                    {/* Etikett */}
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">
+                      {label}
+                    </span>
+                    {/* Redigerbart lönefält direkt i kolumnhuvudet */}
+                    {/* Ocontrollerad input: defaultValue sätter startvärde, DOM äger displayvärdet.
+                        Undviker cursor-hopp som uppstår med controlled inputs (value=) vid varje
+                        tangenttryckning som triggar re-render. compSalaries uppdateras via onChange
+                        för att hålla beräkningarna synkade i realtid. */}
+                    <div className="inline-flex items-center rounded-lg border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                      <input
+                        type="number"
+                        defaultValue={compSalaries[i]}
+                        min={0}
+                        step={500}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          if (!isNaN(v)) setCompSalary(i as 0 | 1 | 2, v);
+                        }}
+                        className="w-24 rounded-lg bg-transparent px-2 py-1 text-right text-sm font-semibold tabular-nums text-gray-900 focus:outline-none"
+                      />
+                      <span className="pr-2 text-xs text-gray-400">kr</span>
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -259,11 +288,10 @@ export default function Calculator() {
             <tbody>
               {(
                 [
-                  ["Bruttolön",           COMPARISON_SALARIES.map((s) => s.salary)],
                   ["Arbetsgivaravgift",   comparisonData.map((d) => d.employersFee)],
                   ["Skatt på lön",        comparisonData.map((d) => d.incomeTax)],
                   ["Nettolön",            comparisonData.map((d) => d.netSalary)],
-                  ["Kvar i bolaget",      COMPARISON_SALARIES.map(({ salary }) =>
+                  ["Kvar i bolaget",      compSalaries.map((salary) =>
                     calculate({ ...inputs, grossSalary: salary }).companyRemainder)],
                   ["Bolagsskatt",         comparisonData.map((d) => d.corporateTax)],
                   ["Möjlig utdelning",    comparisonData.map((d) => d.dividend)],

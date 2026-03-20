@@ -124,7 +124,7 @@ export default function YearlySummary(props: YearlySummaryProps) {
             accent="red"
           />
           <YearlyRow
-            label="Bolagsskatt (20,6 %)"
+            label="Bolagsskatt (20,0 %)"
             monthly={corporateTax}
             yearly={corporateTax * 12}
             accent="red"
