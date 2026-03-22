@@ -1,9 +1,5 @@
-import Calculator from "@/components/Calculator";
+import TabLayout from "@/components/TabLayout";
 
 export default function Home() {
-  return (
-    <main className="min-h-screen bg-gray-50">
-      <Calculator />
-    </main>
-  );
+  return <TabLayout />;
 }
