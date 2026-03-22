@@ -3,21 +3,23 @@
 import { useState } from "react";
 
 // ── Exempeldata (fast scenario) ──────────────────────────────────────────────
-// Henrik fakturerar 80 000 kr/mån, tar ut 45 000 kr/mån i lön, tabell 32
+// Rolf driver en byggfirma. Fakturerar 695 kr/h × 150 h/mån = 104 250 kr/mån.
+// Tar ut 50 000 kr/mån i bruttolön. Bolagskostnader 10 000 kr/mån. Tabell 32.
 
 const EX = {
-  invoiced: 80_000,
-  gross: 45_000,
-  employerFee: 14_139,   // 45 000 × 31.42%
-  totalSalaryCost: 59_139,
-  incomeTax: 11_415,     // tabell 32
-  netSalary: 33_585,
-  companyRemainder: 20_861,  // 80 000 - 59 139
-  corporateTax: 4_172,       // 20 861 × 20%
-  afterCorporateTax: 16_689,
-  dividendTax: 3_338,        // 16 689 × 20%
-  dividendNet: 13_351,
-  totalDisposable: 46_936,
+  invoiced: 104_250,
+  gross: 50_000,
+  otherCosts: 10_000,
+  employerFee: 15_710,     // 50 000 × 31,42 %
+  totalSalaryCost: 65_710, // 50 000 + 15 710
+  incomeTax: 11_383,       // tabell 32, interpolerat
+  netSalary: 38_617,       // 50 000 − 11 383
+  companyRemainder: 28_540, // 104 250 − 65 710 − 10 000
+  corporateTax: 5_708,     // 28 540 × 20 %
+  afterCorporateTax: 22_832,
+  dividendTax: 4_566,      // 22 832 × 20 %
+  dividendNet: 18_266,     // 22 832 × 80 %
+  totalDisposable: 56_883, // 38 617 + 18 266
 } as const;
 
 function kr(n: number): string {
@@ -123,9 +125,12 @@ function Step1() {
       </InfoBox>
 
       <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600">
-        <p className="font-medium text-gray-700 mb-1">I Henriks fall:</p>
-        <p>Han fakturerar sin kund <strong>{kr(EX.invoiced)} per månad</strong> (exklusive moms). Kunden
-        betalar den fakturan till Henriks AB. Henrik har alltså {kr(EX.invoiced)} i bolaget att fördela.</p>
+        <p className="font-medium text-gray-700 mb-1">I Rolfs fall:</p>
+        <p>
+          Rolf driver en liten byggfirma och fakturerar sin kund <strong>695 kr/timme × 150
+          timmar = {kr(EX.invoiced)} per månad</strong> (exklusive moms). Kunden betalar den
+          fakturan till Rolfs AB. Rolf har alltså {kr(EX.invoiced)} i bolaget att fördela.
+        </p>
       </div>
     </div>
   );
@@ -154,9 +159,9 @@ function Step2() {
       </InfoBox>
 
       <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600">
-        <p className="font-medium text-gray-700 mb-1">I Henriks fall:</p>
+        <p className="font-medium text-gray-700 mb-1">I Rolfs fall:</p>
         <p>
-          Henrik vill ta ut <strong>{kr(EX.gross)} i bruttolön</strong>. Bolaget betalar då dessutom{" "}
+          Rolf vill ta ut <strong>{kr(EX.gross)} i bruttolön</strong>. Bolaget betalar då dessutom{" "}
           <strong>{kr(EX.employerFee)} i arbetsgivaravgift</strong>. Total lönekostnad:{" "}
           <strong>{kr(EX.totalSalaryCost)}</strong>.
         </p>
@@ -178,7 +183,7 @@ function Step3() {
 
       <div className="flex flex-col gap-1.5">
         <Row label="Bruttolön" value={kr(EX.gross)} />
-        <Row label="− Skatt (skattetabell 32, ~25,4 %)" value={"−" + kr(EX.incomeTax)} negative indent />
+        <Row label="− Skatt (skattetabell 32, ~22,8 %)" value={"−" + kr(EX.incomeTax)} negative indent />
         <Row label="= Nettolön (utbetalt till dig)" value={kr(EX.netSalary)} positive bold divider highlight />
       </div>
 
@@ -189,10 +194,10 @@ function Step3() {
       </InfoBox>
 
       <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600">
-        <p className="font-medium text-gray-700 mb-1">I Henriks fall:</p>
+        <p className="font-medium text-gray-700 mb-1">I Rolfs fall:</p>
         <p>
           Av {kr(EX.gross)} i bruttolön drar Skatteverket <strong>{kr(EX.incomeTax)} i skatt</strong>.
-          Henrik får <strong>{kr(EX.netSalary)} netto</strong> insatt på sitt privatkonto varje månad.
+          Rolf får <strong>{kr(EX.netSalary)} netto</strong> insatt på sitt privatkonto varje månad.
         </p>
       </div>
     </div>
@@ -205,13 +210,14 @@ function Step4() {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-gray-700 leading-relaxed">
-        Efter att bolaget betalat din lön (inklusive arbetsgivaravgift) finns det pengar kvar i bolaget.
-        Men även bolaget betalar skatt — <em>bolagsskatt</em> på 20 % av vinsten.
+        Efter att bolaget betalat din lön (inklusive arbetsgivaravgift) och sina löpande kostnader
+        finns det pengar kvar. Men även bolaget betalar skatt — <em>bolagsskatt</em> på 20 % av vinsten.
       </p>
 
       <div className="flex flex-col gap-1.5">
         <Row label="Fakturerat till kund" value={kr(EX.invoiced)} />
         <Row label="− Lönekostnad (lön + arbetsgivaravgift)" value={"−" + kr(EX.totalSalaryCost)} negative indent />
+        <Row label="− Bolagskostnader (mobil, bokföring, kläder …)" value={"−" + kr(EX.otherCosts)} negative indent />
         <Row label="= Kvar i bolaget (vinst före skatt)" value={kr(EX.companyRemainder)} bold divider />
         <Row label="− Bolagsskatt (20 %)" value={"−" + kr(EX.corporateTax)} negative indent />
         <Row label="= Kvar efter bolagsskatt" value={kr(EX.afterCorporateTax)} positive bold highlight />
@@ -224,11 +230,11 @@ function Step4() {
       </InfoBox>
 
       <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600">
-        <p className="font-medium text-gray-700 mb-1">I Henriks fall:</p>
+        <p className="font-medium text-gray-700 mb-1">I Rolfs fall:</p>
         <p>
-          Efter lönekostnaden på {kr(EX.totalSalaryCost)} återstår <strong>{kr(EX.companyRemainder)}</strong>.
-          Bolagsskatten på 20 % tar {kr(EX.corporateTax)}.
-          Kvar i bolaget: <strong>{kr(EX.afterCorporateTax)}</strong>.
+          Efter lönekostnaden ({kr(EX.totalSalaryCost)}) och bolagskostnaderna ({kr(EX.otherCosts)})
+          återstår <strong>{kr(EX.companyRemainder)}</strong>. Bolagsskatten på 20 % tar{" "}
+          {kr(EX.corporateTax)}. Kvar i bolaget: <strong>{kr(EX.afterCorporateTax)}</strong>.
         </p>
       </div>
     </div>
@@ -259,10 +265,10 @@ function Step5() {
       </InfoBox>
 
       <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600">
-        <p className="font-medium text-gray-700 mb-1">I Henriks fall:</p>
+        <p className="font-medium text-gray-700 mb-1">I Rolfs fall:</p>
         <p>
           Av {kr(EX.afterCorporateTax)} i möjlig utdelning tar skatten {kr(EX.dividendTax)}.
-          Henrik får <strong>{kr(EX.dividendNet)} netto</strong> i utdelning.
+          Rolf får <strong>{kr(EX.dividendNet)} netto</strong> i utdelning.
         </p>
       </div>
     </div>
@@ -293,7 +299,15 @@ function Summary() {
         <div className="pl-4 flex flex-col gap-1.5">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <span className="text-lg">↓</span>
-            <span>Skatter och avgifter längs vägen</span>
+            <span>Kostnader och skatter längs vägen</span>
+          </div>
+
+          {/* Bolagskostnader (inte skatt, men synliggörs i flödet) */}
+          <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 flex justify-between text-sm">
+            <span className="text-slate-600">− Bolagskostnader (mobil, bokföring m.m.)</span>
+            <span className="tabular-nums font-mono font-semibold text-slate-600">
+              −{kr(EX.otherCosts)}
+            </span>
           </div>
 
           {[
@@ -353,8 +367,9 @@ function Summary() {
         </div>
         <div className="text-xs text-gray-500">
           Summa av alla skatter och avgifter ({kr(totalTax)}) delat på fakturerat belopp ({kr(EX.invoiced)}).
+          Bolagskostnader ({kr(EX.otherCosts)}) räknas inte som skatt och ingår inte i siffran.
         </div>
-        {/* Stapelvisualisation */}
+        {/* Stapelvisualisering */}
         <div className="mt-3 flex gap-0.5 h-4 rounded-full overflow-hidden">
           <div
             className="bg-green-500"
@@ -367,21 +382,27 @@ function Summary() {
             title={`Utdelning ${kr(EX.dividendNet)}`}
           />
           <div
+            className="bg-slate-300"
+            style={{ width: `${(EX.otherCosts / EX.invoiced) * 100}%` }}
+            title={`Bolagskostnader ${kr(EX.otherCosts)}`}
+          />
+          <div
             className="bg-red-400"
             style={{ width: `${(totalTax / EX.invoiced) * 100}%` }}
             title={`Skatter ${kr(totalTax)}`}
           />
         </div>
-        <div className="mt-2 flex gap-4 text-xs text-gray-500">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-green-500 inline-block" />Nettolön</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-blue-400 inline-block" />Utdelning</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-slate-300 inline-block" />Bolagskostnader</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-400 inline-block" />Skatter & avgifter</span>
         </div>
       </div>
 
       <div className="text-xs text-gray-400 text-center">
-        Exempelberäkning: 80 000 kr/mån fakturerat, 45 000 kr/mån i lön, skattetabell 32.
-        Inga övriga kostnader eller pensionsavsättning inräknade i detta exempel.
+        Exempelberäkning: Rolf fakturerar 695 kr/h × 150 h = {kr(EX.invoiced)}/mån, tar ut {kr(EX.gross)}/mån i lön,
+        har {kr(EX.otherCosts)}/mån i bolagskostnader, skattetabell 32.
       </div>
     </div>
   );
@@ -437,9 +458,10 @@ export default function Guide() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Så funkar det</h1>
         <p className="mt-1 text-sm text-gray-500">
-          En genomgång i 5 steg med ett fast exempel — Henrik fakturerar{" "}
-          <strong className="text-gray-700">80 000 kr/mån</strong>, tar ut{" "}
-          <strong className="text-gray-700">45 000 kr/mån</strong> i lön (tabell 32).
+          En genomgång i 5 steg med ett fast exempel — Rolf fakturerar{" "}
+          <strong className="text-gray-700">104 250 kr/mån</strong> (695 kr/h × 150 h), tar ut{" "}
+          <strong className="text-gray-700">50 000 kr/mån</strong> i lön och har{" "}
+          <strong className="text-gray-700">10 000 kr/mån</strong> i bolagskostnader (tabell 32).
         </p>
       </div>
 
