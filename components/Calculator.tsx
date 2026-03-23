@@ -2,11 +2,23 @@
 
 import { useState, useMemo } from "react";
 import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+import {
   calculate,
+  optimizeSalary,
   formatKr,
   AVAILABLE_TAX_TABLES,
   DIVIDEND_TAX_RATE,
   type CalculatorInputs,
+  type OptimizeSalaryResult,
 } from "@/lib/taxCalculations";
 import ResultCard from "./ResultCard";
 import BreakdownChart, { type BreakdownData } from "./BreakdownChart";
@@ -88,6 +100,13 @@ export default function Calculator() {
   const [pensionContribution, setPension]   = useState(2_000);
   const [taxTableNum, setTaxTableNum]       = useState(32);
   const [showComparison, setShowComparison] = useState(false);
+  const [optimizeResult, setOptimizeResult] = useState<OptimizeSalaryResult | null>(null);
+
+  function handleOptimize() {
+    const res = optimizeSalary(invoicedAmount, otherCosts, pensionContribution, taxTableNum);
+    setGrossSalary(res.optimalGrossSalary);
+    setOptimizeResult(res);
+  }
 
   /** Redigerbara lönenivåer i jämförelsekolumnerna */
   const [compSalaries, setCompSalaries] = useState<[number, number, number]>([35_000, 50_000, 70_000]);
@@ -149,12 +168,20 @@ export default function Calculator() {
             onChange={setInvoicedAmount}
             hint="exkl. moms / mån"
           />
-          <NumInput
-            label="Bruttolön att ta ut"
-            value={grossSalary}
-            onChange={setGrossSalary}
-            hint="lön före skatt / mån"
-          />
+          <div className="flex flex-col gap-1">
+            <NumInput
+              label="Bruttolön att ta ut"
+              value={grossSalary}
+              onChange={(v) => { setGrossSalary(v); setOptimizeResult(null); }}
+              hint="lön före skatt / mån"
+            />
+            <button
+              onClick={handleOptimize}
+              className="rounded-md bg-indigo-600 px-2 py-1 text-xs font-semibold text-white hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
+            >
+              ✨ Optimera löneuttag
+            </button>
+          </div>
           <NumInput
             label="Övriga bolagskostnader"
             value={otherCosts}
@@ -182,6 +209,56 @@ export default function Calculator() {
           </div>
         </div>
       </div>
+
+      {/* ── Optimeringsresultat ── */}
+      {optimizeResult && (
+        <div className="mb-6 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-3 py-1 text-sm font-semibold text-white">
+              ✨ Optimalt
+            </span>
+            <span className="text-sm text-indigo-900 font-medium">
+              {formatKr(optimizeResult.optimalGrossSalary)}/mån ger{" "}
+              <span className="font-bold">{formatKr(optimizeResult.optimalTotalDisposable)}</span> disponibelt
+            </span>
+            <span className="text-xs text-indigo-600">
+              (nettolön {formatKr(Math.max(0, optimizeResult.optimalNetSalary))} + utdelning {formatKr(Math.max(0, optimizeResult.optimalDividendAfterTax))})
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={optimizeResult.points} margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#c7d2fe" />
+              <XAxis
+                dataKey="grossSalary"
+                tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+                tick={{ fontSize: 11 }}
+              />
+              <YAxis
+                tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+                tick={{ fontSize: 11 }}
+                width={40}
+              />
+              <Tooltip
+                formatter={(value) => [formatKr(Number(value)), "Totalt disponibelt"]}
+                labelFormatter={(label) => `Bruttolön: ${formatKr(Number(label))}`}
+              />
+              <ReferenceLine
+                x={optimizeResult.optimalGrossSalary}
+                stroke="#4f46e5"
+                strokeDasharray="4 4"
+                label={{ value: "Optimum", fill: "#4f46e5", fontSize: 11, position: "top" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="totalDisposable"
+                stroke="#4f46e5"
+                dot={false}
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* ── Stora KPI-kort ── */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
