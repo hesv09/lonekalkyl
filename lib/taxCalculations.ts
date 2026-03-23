@@ -756,6 +756,7 @@ export interface CalculatorResults {
 
   // Bolaget
   specialWageTax: number;      // Särskild löneskatt på pension (24,26 %)
+  totalPensionCost: number;    // Pensionsavsättning + SLS
   companyRemainder: number;    // Kvar i bolaget före bolagsskatt
   corporateTax: number;        // Bolagsskatt 20,0 %
   possibleDividend: number;    // Möjlig utdelning (före kapitalskatt)
@@ -787,9 +788,10 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
 
   // 3. Särskild löneskatt på pensionskostnader (24,26 %)
   const specialWageTax = Math.round(pensionContribution * SPECIAL_WAGE_TAX_RATE);
+  const totalPensionCost = pensionContribution + specialWageTax;
 
   // 4. Kvar i bolaget (kan vara negativt om lönen är hög)
-  const companyRemainder = invoicedAmount - totalSalaryCost - otherCosts - pensionContribution - specialWageTax;
+  const companyRemainder = invoicedAmount - totalSalaryCost - otherCosts - totalPensionCost;
 
   // 5. Bolagsskatt – enbart om kvar i bolaget > 0
   const corporateTax = companyRemainder > 0
@@ -806,16 +808,17 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
     ? Math.round(possibleDividend * (1 - DIVIDEND_TAX_RATE))
     : possibleDividend;
 
-  // 7. Skatt på lön via vald skattetabell
+  // 8. Skatt på lön via vald skattetabell
   const incomeTax = lookupTax(grossSalary, taxTableNum);
 
-  // 7. Nettolön
+  // 9. Nettolön
   const netSalary = grossSalary - incomeTax;
 
   return {
     employersFee,
     totalSalaryCost,
     specialWageTax,
+    totalPensionCost,
     incomeTax,
     netSalary,
     companyRemainder,
