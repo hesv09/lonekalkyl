@@ -837,6 +837,58 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   };
 }
 
+export interface OptimizeSalaryResult {
+  optimalGrossSalary: number;
+  optimalNetSalary: number;
+  optimalDividendAfterTax: number;
+  optimalTotalDisposable: number;
+  points: { grossSalary: number; totalDisposable: number }[];
+}
+
+/**
+ * Hitta den bruttolön (steg 500 kr) som maximerar totalt disponibelt
+ * (nettolön + utdelning efter skatt).
+ */
+export function optimizeSalary(
+  invoicedAmount: number,
+  otherCosts: number,
+  pensionContribution: number,
+  taxTableNum: number = 32,
+): OptimizeSalaryResult {
+  const specialWageTax = Math.round(pensionContribution * SPECIAL_WAGE_TAX_RATE);
+  const totalPensionCost = pensionContribution + specialWageTax;
+
+  // Övre gräns: punkt där bolagets kassaflöde = 0
+  const maxGross = Math.max(
+    0,
+    Math.floor((invoicedAmount - otherCosts - totalPensionCost) / (1 + EMPLOYERS_FEE_RATE)),
+  );
+
+  const points: { grossSalary: number; totalDisposable: number }[] = [];
+  let optimalGrossSalary = 0;
+  let optimalTotalDisposable = -Infinity;
+  let optimalResult: CalculatorResults | null = null;
+
+  for (let grossSalary = 0; grossSalary <= maxGross; grossSalary += 500) {
+    const res = calculate({ invoicedAmount, grossSalary, otherCosts, pensionContribution, taxTableNum });
+    const totalDisposable = Math.max(0, res.netSalary) + Math.max(0, res.dividendAfterTax);
+    points.push({ grossSalary, totalDisposable });
+    if (totalDisposable > optimalTotalDisposable) {
+      optimalTotalDisposable = totalDisposable;
+      optimalGrossSalary = grossSalary;
+      optimalResult = res;
+    }
+  }
+
+  return {
+    optimalGrossSalary,
+    optimalNetSalary: optimalResult?.netSalary ?? 0,
+    optimalDividendAfterTax: optimalResult?.dividendAfterTax ?? 0,
+    optimalTotalDisposable,
+    points,
+  };
+}
+
 /** Formatera kronor med tusentalsavgränsare */
 export function formatKr(amount: number): string {
   return new Intl.NumberFormat("sv-SE", {
