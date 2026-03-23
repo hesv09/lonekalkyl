@@ -9,6 +9,7 @@ interface YearlySummaryProps {
   grossSalary: number;
   otherCosts: number;
   pension: number;
+  specialWageTax: number;
   corporateTax: number;
   dividend: number;
   dividendAfterTax: number;
@@ -55,6 +56,7 @@ export default function YearlySummary(props: YearlySummaryProps) {
     grossSalary,
     otherCosts,
     pension,
+    specialWageTax,
     corporateTax,
     dividend,
     dividendAfterTax,
@@ -117,6 +119,14 @@ export default function YearlySummary(props: YearlySummaryProps) {
               monthly={pension}
               yearly={pension * 12}
               accent="gray"
+            />
+          )}
+          {specialWageTax > 0 && (
+            <YearlyRow
+              label="Särskild löneskatt pension (24,26 %)"
+              monthly={specialWageTax}
+              yearly={specialWageTax * 12}
+              accent="red"
             />
           )}
           <YearlyRow

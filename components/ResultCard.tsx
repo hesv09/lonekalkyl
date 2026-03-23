@@ -43,6 +43,7 @@ interface ResultCardProps {
   grossSalary: number;
   otherCosts: number;
   pension: number;
+  specialWageTax: number;
   corporateTax: number;
   dividend: number;
   dividendAfterTax: number;
@@ -68,6 +69,7 @@ export default function ResultCard(props: ResultCardProps) {
     grossSalary,
     otherCosts,
     pension,
+    specialWageTax,
     corporateTax,
     dividend,
     dividendAfterTax,
@@ -95,6 +97,7 @@ export default function ResultCard(props: ResultCardProps) {
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Övriga kostnader</p>
             {otherCosts > 0 && <ResultRow label="Fasta kostnader" value={otherCosts} sub color={COLORS.otherCosts} negative />}
             {pension > 0 && <ResultRow label="Pensionsavsättning" value={pension} sub color={COLORS.pension} negative />}
+            {specialWageTax > 0 && <ResultRow label="Särskild löneskatt pension (24,26 %)" value={specialWageTax} sub color={COLORS.pension} negative />}
           </div>
         )}
 

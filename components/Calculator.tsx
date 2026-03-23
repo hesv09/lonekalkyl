@@ -85,7 +85,7 @@ export default function Calculator() {
   const [invoicedAmount, setInvoicedAmount] = useState(87_500);
   const [grossSalary, setGrossSalary]       = useState(50_000);
   const [otherCosts, setOtherCosts]         = useState(5_000);
-  const [pensionContribution, setPension]   = useState(3_000);
+  const [pensionContribution, setPension]   = useState(2_000);
   const [taxTableNum, setTaxTableNum]       = useState(32);
   const [showComparison, setShowComparison] = useState(false);
 
@@ -225,6 +225,7 @@ export default function Calculator() {
             grossSalary={grossSalary}
             otherCosts={otherCosts}
             pension={pensionContribution}
+            specialWageTax={result.specialWageTax}
             corporateTax={result.corporateTax}
             dividend={result.possibleDividend}
             dividendAfterTax={result.dividendAfterTax}
@@ -250,6 +251,7 @@ export default function Calculator() {
           grossSalary={grossSalary}
           otherCosts={otherCosts}
           pension={pensionContribution}
+          specialWageTax={result.specialWageTax}
           corporateTax={result.corporateTax}
           dividend={result.possibleDividend}
           dividendAfterTax={result.dividendAfterTax}

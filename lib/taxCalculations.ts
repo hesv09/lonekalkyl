@@ -734,6 +734,9 @@ export const CORPORATE_TAX_RATE = 0.20;
 /** Kapitalskatt på utdelning enligt 3:12-reglerna – 20,0 % */
 export const DIVIDEND_TAX_RATE = 0.20;
 
+/** Särskild löneskatt på pensionskostnader – 24,26 % (2026) */
+export const SPECIAL_WAGE_TAX_RATE = 0.2426;
+
 export interface CalculatorInputs {
   invoicedAmount: number;      // Fakturerat belopp kr/mån
   grossSalary: number;         // Bruttolön kr/mån
@@ -752,6 +755,7 @@ export interface CalculatorResults {
   netSalary: number;           // Nettolön (utbetald)
 
   // Bolaget
+  specialWageTax: number;      // Särskild löneskatt på pension (24,26 %)
   companyRemainder: number;    // Kvar i bolaget före bolagsskatt
   corporateTax: number;        // Bolagsskatt 20,0 %
   possibleDividend: number;    // Möjlig utdelning (före kapitalskatt)
@@ -781,20 +785,23 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   // 2. Total lönekostnad för bolaget
   const totalSalaryCost = grossSalary + employersFee;
 
-  // 3. Kvar i bolaget (kan vara negativt om lönen är hög)
-  const companyRemainder = invoicedAmount - totalSalaryCost - otherCosts - pensionContribution;
+  // 3. Särskild löneskatt på pensionskostnader (24,26 %)
+  const specialWageTax = Math.round(pensionContribution * SPECIAL_WAGE_TAX_RATE);
 
-  // 4. Bolagsskatt – enbart om kvar i bolaget > 0
+  // 4. Kvar i bolaget (kan vara negativt om lönen är hög)
+  const companyRemainder = invoicedAmount - totalSalaryCost - otherCosts - pensionContribution - specialWageTax;
+
+  // 5. Bolagsskatt – enbart om kvar i bolaget > 0
   const corporateTax = companyRemainder > 0
     ? Math.round(companyRemainder * CORPORATE_TAX_RATE)
     : 0;
 
-  // 5. Möjlig utdelning (före kapitalskatt)
+  // 6. Möjlig utdelning (före kapitalskatt)
   const possibleDividend = companyRemainder > 0
     ? companyRemainder - corporateTax
     : companyRemainder; // negativt → inga pengar kvar
 
-  // 6. Kapitalskatt på utdelning 20 % (3:12-reglerna)
+  // 7. Kapitalskatt på utdelning 20 % (3:12-reglerna)
   const dividendAfterTax = possibleDividend > 0
     ? Math.round(possibleDividend * (1 - DIVIDEND_TAX_RATE))
     : possibleDividend;
@@ -808,6 +815,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
   return {
     employersFee,
     totalSalaryCost,
+    specialWageTax,
     incomeTax,
     netSalary,
     companyRemainder,
@@ -819,7 +827,7 @@ export function calculate(inputs: CalculatorInputs): CalculatorResults {
       incomeTax,
       employersFee,
       otherCosts,
-      pension: pensionContribution,
+      pension: pensionContribution + specialWageTax,
       corporateTax: Math.max(0, corporateTax),
       dividend: Math.max(0, possibleDividend),
     },
