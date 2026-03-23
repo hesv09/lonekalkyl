@@ -139,6 +139,18 @@ export default function Calculator() {
     [invoicedAmount, otherCosts, pensionContribution, compSalaries],
   );
 
+  // Dynamiskt beräknad optimal lönenivå för jämförelsetabellen
+  const autoOptimal = useMemo(
+    () => optimizeSalary(invoicedAmount, otherCosts, pensionContribution, taxTableNum),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [invoicedAmount, otherCosts, pensionContribution, taxTableNum],
+  );
+  const autoOptimalCalc = useMemo(
+    () => calculate({ ...inputs, grossSalary: autoOptimal.optimalGrossSalary }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [invoicedAmount, otherCosts, pensionContribution, taxTableNum, autoOptimal.optimalGrossSalary],
+  );
+
   const effectiveTaxRate = grossSalary > 0
     ? (result.incomeTax / grossSalary * 100).toFixed(1)
     : "0";
@@ -348,7 +360,7 @@ export default function Calculator() {
       {showComparison && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm overflow-x-auto">
           <h2 className="mb-3 text-base font-semibold text-gray-800">
-            Jämförelse – tre lönenivåer
+            Jämförelse – tre lönenivåer + optimalt
           </h2>
           <table className="w-full text-sm">
             <thead>
@@ -365,8 +377,7 @@ export default function Calculator() {
                     {/* Ocontrollerad input: defaultValue sätter startvärde, DOM äger displayvärdet.
                         Undviker cursor-hopp som uppstår med controlled inputs (value=) vid varje
                         tangenttryckning som triggar re-render. */}
-                    {/* Indigo-stil signalerar tydligt att fältet är redigerbart */}
-                    <div className="inline-flex items-center rounded-lg border-2 border-indigo-300 bg-indigo-50 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200">
+                    <div className="inline-flex items-center rounded-lg border-2 border-gray-200 bg-gray-50 focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-200">
                       <input
                         type="number"
                         defaultValue={compSalaries[i]}
@@ -376,19 +387,31 @@ export default function Calculator() {
                           const v = Number(e.target.value);
                           if (!isNaN(v)) setCompSalary(i as 0 | 1 | 2, v);
                         }}
-                        className="w-24 rounded-lg bg-transparent px-2 py-1 text-right text-sm font-bold tabular-nums text-indigo-700 focus:outline-none"
+                        className="w-24 rounded-lg bg-transparent px-2 py-1 text-right text-sm font-bold tabular-nums text-gray-700 focus:outline-none"
                       />
-                      <span className="pr-2 text-xs font-medium text-indigo-400">kr/mån</span>
+                      <span className="pr-2 text-xs font-medium text-gray-400">kr/mån</span>
                     </div>
                   </th>
                 ))}
+                {/* Fjärde kolumn: optimalt löneuttag */}
+                <th className="pb-1 text-right align-bottom pl-4 border-l-2 border-indigo-200">
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-indigo-500 mb-1">
+                    ✨ Optimalt
+                  </span>
+                  <div className="inline-flex items-center rounded-lg border-2 border-indigo-400 bg-indigo-50 px-3 py-1">
+                    <span className="text-sm font-bold tabular-nums text-indigo-700">
+                      {Math.round(autoOptimal.optimalGrossSalary / 1000 * 10) / 10} k
+                    </span>
+                    <span className="pl-1.5 text-xs font-medium text-indigo-400">kr/mån</span>
+                  </div>
+                </th>
               </tr>
               {/* Rad 2: tydlig markering att beräknade värden är per år */}
               <tr className="border-b-2 border-gray-200">
                 <th className="py-1.5 text-left text-xs font-semibold text-blue-600">
                   Per år (× 12 månader)
                 </th>
-                <th colSpan={3} className="py-1.5 text-right text-xs text-blue-500">
+                <th colSpan={4} className="py-1.5 text-right text-xs text-blue-500">
                   Alla beräknade belopp nedan är årsbelopp
                 </th>
               </tr>
@@ -396,17 +419,32 @@ export default function Calculator() {
             <tbody>
               {(
                 [
-                  ["Arbetsgivaravgift",   comparisonData.map((d) => d.employersFee * 12)],
-                  ["Skatt på lön",        comparisonData.map((d) => d.incomeTax * 12)],
-                  ["Nettolön",            comparisonData.map((d) => d.netSalary * 12)],
-                  ["Kvar i bolaget",      compSalaries.map((salary) =>
-                    calculate({ ...inputs, grossSalary: salary }).companyRemainder * 12)],
-                  ["Bolagsskatt",                   comparisonData.map((d) => d.corporateTax * 12)],
-                  ["Utdelning (före skatt)",        comparisonData.map((d) => d.dividend * 12)],
-                  ["Kapitalskatt 3:12 (20 %)",      comparisonData.map((d) => -Math.round(Math.max(0, d.dividend) * DIVIDEND_TAX_RATE) * 12)],
-                  ["Utdelning efter skatt",         comparisonData.map((d) => Math.round(Math.max(0, d.dividend) * (1 - DIVIDEND_TAX_RATE)) * 12)],
-                ] as [string, number[]][]
-              ).map(([label, values]) => (
+                  ["Arbetsgivaravgift",
+                    comparisonData.map((d) => d.employersFee * 12),
+                    autoOptimalCalc.employersFee * 12],
+                  ["Skatt på lön",
+                    comparisonData.map((d) => d.incomeTax * 12),
+                    autoOptimalCalc.incomeTax * 12],
+                  ["Nettolön",
+                    comparisonData.map((d) => d.netSalary * 12),
+                    autoOptimalCalc.netSalary * 12],
+                  ["Kvar i bolaget",
+                    compSalaries.map((salary) => calculate({ ...inputs, grossSalary: salary }).companyRemainder * 12),
+                    autoOptimalCalc.companyRemainder * 12],
+                  ["Bolagsskatt",
+                    comparisonData.map((d) => d.corporateTax * 12),
+                    autoOptimalCalc.corporateTax * 12],
+                  ["Utdelning (före skatt)",
+                    comparisonData.map((d) => d.dividend * 12),
+                    autoOptimalCalc.breakdown.dividend * 12],
+                  ["Kapitalskatt 3:12 (20 %)",
+                    comparisonData.map((d) => -Math.round(Math.max(0, d.dividend) * DIVIDEND_TAX_RATE) * 12),
+                    -Math.round(autoOptimalCalc.breakdown.dividend * DIVIDEND_TAX_RATE) * 12],
+                  ["Utdelning efter skatt",
+                    comparisonData.map((d) => Math.round(Math.max(0, d.dividend) * (1 - DIVIDEND_TAX_RATE)) * 12),
+                    Math.round(autoOptimalCalc.breakdown.dividend * (1 - DIVIDEND_TAX_RATE)) * 12],
+                ] as [string, number[], number][]
+              ).map(([label, values, optVal]) => (
                 <tr key={label} className="border-b border-gray-100 last:border-0">
                   <td className="py-1.5 text-slate-700 font-medium">{label}</td>
                   {values.map((v, i) => (
@@ -414,6 +452,9 @@ export default function Calculator() {
                       {formatKr(v)}
                     </td>
                   ))}
+                  <td className={`py-1.5 text-right font-semibold tabular-nums pl-4 border-l-2 border-indigo-100 ${optVal < 0 ? "text-red-600" : "text-indigo-700"}`}>
+                    {formatKr(optVal)}
+                  </td>
                 </tr>
               ))}
               <tr className="border-t-2 border-gray-300 bg-green-50">
@@ -426,6 +467,9 @@ export default function Calculator() {
                     </td>
                   );
                 })}
+                <td className="py-2 text-right font-bold tabular-nums text-indigo-700 pl-4 border-l-2 border-indigo-100 bg-indigo-50">
+                  {formatKr((autoOptimalCalc.netSalary + Math.round(autoOptimalCalc.breakdown.dividend * (1 - DIVIDEND_TAX_RATE))) * 12)}
+                </td>
               </tr>
             </tbody>
           </table>
